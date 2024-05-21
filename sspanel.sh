@@ -157,7 +157,7 @@ echo -e "\033[36m###############################################################
 rm -rf /var/www/*
 
 cd /var/www/
-git clone https://gitee.com/gz1903/sspanel.git ${pwd}
+git clone https://github.com/BobCoderS9/SSPanel-Metron.git ${pwd}
 # 下载 composer
 cd /var/www/sspanel/
 git config core.filemode false
