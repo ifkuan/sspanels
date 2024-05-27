@@ -94,11 +94,24 @@ echo -e "\033[36m#                                                              
 echo -e "\033[36m#         正在安装配置PHP环境及扩展  时间较长请稍等~                  #\033[0m"
 echo -e "\033[36m#                                                                     #\033[0m"
 echo -e "\033[36m#######################################################################\033[0m"
-# 添加 PPA
-add-apt-repository ppa:ondrej/php -y
-apt update
+# 设置Debian官方PHP源
+ apt install -y lsb-release ca-certificates apt-transport-https software-properties-common gnupg2
+ echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/sury-php.list
+ curl -fsSL  https://packages.sury.org/php/apt.gpg| sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/sury-keyring.gpg
+ apt update 
 # 安装PHP 8.2，如果需要其他版本，自行替换
-apt install -y php8.2-fpm php8.2-mysql php8.2-curl php8.2-gd php8.2-mbstring php8.2-xml php8.2-xmlrpc php8.2-opcache php8.2-zip php8.2 php8.2-bz2 php8.2-bcmath
+apt install php8.2
+apt install php8.2-{bcmath,fpm,xml,mysql,zip,intl,ldap,gd,cli,bz2,curl,mbstring,pgsql,opcache,soap,cgi,xmlrpc,fileinfo,redis,swoole,readline,inotify} -y
+
+#apt 不能安装的，用pecl install 命令安装
+#先安装pecl
+curl -O https://pear.php.net/go-pear.phar
+sudo php -d detect_unicode=0 go-pear.phar
+
+#用pear安装event扩展
+apt install php-cli php-dev libevent-dev
+pecl install event
+
 # 开机自启
 sudo systemctl enable php8.2-fpm
 
@@ -129,7 +142,7 @@ server {
     listen [::]:80;
     root /var/www/sspanel/public; # 改成你自己的路径，需要以 /public 结尾
     index index.php index.html;
-    server_name guagua.publicvm.com www.guagua.publicvm.com;
+    server_name guagua.publicvm.com www.guagua.publicvm.com; # 改成你自己的域名
 
     location / {
         try_files $uri /index.php$is_args$args;
@@ -156,10 +169,8 @@ echo -e "\033[36m###############################################################
 # 清空目录文件
 rm -rf /var/www/*
 
-# 创建网站目录
 mkdir /var/www/sspanel
 cd /var/www/sspanel
-# 下载需要的网站源码
 git clone https://github.com/imRoll/GoPassThemeForSSPanel.git ${PWD}
 
 # 下载 composer
