@@ -156,8 +156,10 @@ echo -e "\033[36m###############################################################
 # 清空目录文件
 rm -rf /var/www/*
 
-mkdir sspanel
+# 创建网站目录
+mkdir /var/www/sspanel
 cd /var/www/sspanel
+# 下载需要的网站源码
 git clone https://github.com/imRoll/GoPassThemeForSSPanel.git ${PWD}
 
 # 下载 composer
