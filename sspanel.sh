@@ -4,11 +4,9 @@
 
 # Author : GZ
 
-# Mail : v2board@qq.com
-
 # Function : 脚本介绍
 
-# Version : V1.0
+# Version : V1.1
 
 
 # 检查用户是否为root用户
@@ -25,7 +23,7 @@ printf "
 #                     欢迎使用sspanel一键部署脚本                     #
 #                脚本适配环境Ubuntu 22.04+/Debian 11+、内存1G+        #
 #                请使用干净主机部署！                                 #
-#                更多信息请访问 https://gz1903.github.io              #
+#                                                                     #
 #######################################################################\033[0m
 "
 
@@ -42,7 +40,7 @@ ips="$(curl ip.sb)"
 
 echo -e "\033[36m#######################################################################\033[0m"
 echo -e "\033[36m#                                                                     #\033[0m"
-echo -e "\033[36m#                    正在安装常用组件 请稍等~                         #\033[0m"
+echo -e "\033[36m#                    正在安装必备组件 请稍等~                         #\033[0m"
 echo -e "\033[36m#                                                                     #\033[0m"
 echo -e "\033[36m#######################################################################\033[0m"
 # 更新必备基础软件
@@ -114,6 +112,25 @@ pecl install event -y
 # 开机自启
 sudo systemctl enable php8.2-fpm
 
+
+echo -e "\033[36m#######################################################################\033[0m"
+echo -e "\033[36m#                                                                     #\033[0m"
+echo -e "\033[36m#                    正在配置PHP.ini 请稍等~                          #\033[0m"
+echo -e "\033[36m#                                                                     #\033[0m"
+echo -e "\033[36m#######################################################################\033[0m"
+sed -i "s/post_max_size = 8M/post_max_size = 32M/" /etc/php/8.2/apache2/php.ini
+sed -i "s/max_execution_time = 30/max_execution_time = 600/" /etc/php/8.2/apache2/php.ini
+sed -i "s/max_input_time = 60/max_input_time = 600/" /etc/php/8.2/apache2/php.ini
+sed -i "s#;date.timezone =#date.timezone = Asia/Shanghai#" /etc/php/8.2/apache2/php.ini
+
+# 配置php-sg11
+mkdir -p /sg
+wget -P /sg/  https://cdn.jsdelivr.net/gh/gz1903/sg11/Linux%2064-bit/ixed.7.3.lin
+sed -i '$a\extension=/sg/ixed.7.3.lin' /etc/php/8.2/apache2/php.ini
+#修改PHP配置文件
+echo $?="PHP.inin配置完成完成"
+
+
 echo -e "\033[36m#######################################################################\033[0m"
 echo -e "\033[36m#                                                                     #\033[0m"
 echo -e "\033[36m#                   正在配置Mysql数据库 请稍等~                       #\033[0m"
@@ -122,8 +139,19 @@ echo -e "\033[36m###############################################################
 #修改数据库密码
 mysqladmin -u root password "$Database_Password"
 echo -e "\033[36m数据库密码设置完成！\033[0m"
+
 #创建数据库
-mysql -uroot -p$Database_Password -e "CREATE DATABASE sspanel CHARACTER set utf8 collate utf8_bin;"
+mysql -uroot -p$Database_Password  --default-character-set=utf8<<EOF
+CREATE DATABASE xiaoman;
+use xiaoman;
+CREATE USER 'xiaoman'@'localhost' IDENTIFIED BY '$Database_Password';
+GRANT ALL PRIVILEGES ON *.* TO 'xiaoman'@'localhost';
+FLUSH PRIVILEGES;
+EOF
+
+
+
+
 echo $?="正在创建sspanel数据库"
 
 echo -e "\033[36m#######################################################################\033[0m"
@@ -191,19 +219,29 @@ cp config/.metron_setting.example.php config/.metron_setting.php
 cp config/.zeroconfig.example.php config/.zeroconfig.php
 # 设置sspanel数据库连接
 # 设置此key为随机字符串确保网站安全 !!!
-sed -i "s/1145141919810/aksgsj@h$RANDOM/" /var/www/sspanel/config/.config.php
+sed -i "s/1145141919810/aks34Wgsj@h$RANDOM/" /var/www/sspanel/config/.config.php
 # 站点名称
 sed -i "s/SSPanel-UIM/小满/" /var/www/sspanel/config/.config.php
 # 站点地址
-sed -i "s/https:\/\/sspanel.host/http:\/\/$ips/" /var/www/sspanel/config/.config.php
+sed -i "s/https:\/\/url.com/http:\/\/$ips/" /var/www/sspanel/config/.config.php
 # 用于校验魔改后端请求
-sed -i "s/NimaQu/sadg^#@s$RANDOM/" /var/www/sspanel/config/.config.php
+sed -i "s/default_mu_key/sadg^#@s$RANDOM/" /var/www/sspanel/config/.config.php
 # 设置sspanel数据库连接地址
 sed -i "s/host'\]      = ''/host'\]      = '127.0.0.1'/" /var/www/sspanel/config/.config.php
 # 设置数据库连接密码
 sed -i "s/password'\]  = 'sspanel'/password'\]  = '$Database_Password'/" /var/www/sspanel/config/.config.php
 # 导入数据库文件
-mysql -uroot -p$Database_Password sspanel < /var/www/sspanel/sql/glzjin_all.sql;
+mysql -uxiaoman -p$Database_Password sspanel < /var/www/sspanel/sql/clean.sql;
+mysql -uxiaoman -p$Database_Password sspanel < /var/www/sspanel/sql/config.sql;
+mysql -uxiaoman -p$Database_Password sspanel < /var/www/sspanel/sql/cool.sql;
+mysql -uxiaoman -p$Database_Password sspanel < /var/www/sspanel/sql/detect_ban_log.sql;
+mysql -uxiaoman -p$Database_Password sspanel < /var/www/sspanel/sql/fix_unable_to_reg.sql;
+mysql -uxiaoman -p$Database_Password sspanel < /var/www/sspanel/sql/gconfig.sql;
+mysql -uxiaoman -p$Database_Password sspanel < /var/www/sspanel/sql/telegram_tasks.sql;
+mysql -uxiaoman -p$Database_Password sspanel < /var/www/sspanel/sql/user_subscribe_log.sql;
+mysql -uxiaoman -p$Database_Password sspanel < /var/www/sspanel/sql/glzjin_all.sql;
+
+
 echo -e "\033[36m设置管理员账号：\033[0m"
 php xcat User createAdmin
 # 重置所有流量
@@ -216,7 +254,7 @@ echo $?="服务启动完成"
 
 echo -e "\033[32m--------------------------- 安装已完成 ---------------------------\033[0m"
 echo -e "\033[32m 数据库名     :sspanel\033[0m"
-echo -e "\033[32m 数据库用户名 :root\033[0m"
+echo -e "\033[32m 数据库用户名 :xiaoman\033[0m"
 echo -e "\033[32m 数据库密码   :"$Database_Password
 echo -e "\033[32m 网站目录     :/var/www/sspanel\033[0m"
 echo -e "\033[32m 配置目录     :/var/www/sspanel/config/.config.php\033[0m"
@@ -225,8 +263,6 @@ echo -e "\033[32m 网页外网访问 :http://"$ips
 echo -e "\033[32m 安装日志文件 :/var/log/"$install_date
 echo -e "\033[32m------------------------------------------------------------------\033[0m"
 echo -e "\033[32m 如果安装有问题请反馈安装日志文件。\033[0m"
-echo -e "\033[32m 使用有问题请在这里寻求帮助:https://gz1903.github.io\033[0m"
-echo -e "\033[32m 电子邮箱:v2board@qq.com\033[0m"
 echo -e "\033[32m------------------------------------------------------------------\033[0m"
 
 }
