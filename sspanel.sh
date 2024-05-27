@@ -1,6 +1,6 @@
 #/bin/bash
 
-# Date : 2021-11-02 22:07:23
+# Date : 2024-05-27 22:07:23
 
 # Author : GZ
 
@@ -23,7 +23,7 @@ install_date="sspanel_install_$(date +%Y-%m-%d_%H:%M:%S).log"
 printf "
 \033[36m#######################################################################
 #                     欢迎使用sspanel一键部署脚本                     #
-#                脚本适配环境Ubuntu 18.04+/Debian 10+、内存1G+        #
+#                脚本适配环境Ubuntu 22.04+/Debian 11+、内存1G+        #
 #                请使用干净主机部署！                                 #
 #                更多信息请访问 https://gz1903.github.io              #
 #######################################################################\033[0m
@@ -66,11 +66,11 @@ echo -e "\033[36m#                                                              
 echo -e "\033[36m#######################################################################\033[0m"
 # MariaDB 是 MySQL 关系数据库管理系统的一个复刻，由社区开发，有商业支持，旨在继续保持在 GNU GPL 下开源。
 # MariaDB 与 MySQL 完全兼容
-# 选取官方源的镜像进行安装 MariaDB 10.5 稳定版本
+# 选取官方源的镜像进行安装 MariaDB 10.11 稳定版本
 # 添加清华源
 sudo apt-get install software-properties-common dirmngr apt-transport-https
 sudo apt-key adv --fetch-keys 'https://mariadb.org/mariadb_release_signing_key.asc'
-sudo add-apt-repository 'deb [arch=amd64,arm64,ppc64el] https://mirrors.tuna.tsinghua.edu.cn/mariadb/repo/10.5/ubuntu bionic main'
+sudo add-apt-repository 'deb [arch=amd64,arm64,ppc64el] https://mirrors.tuna.tsinghua.edu.cn/mariadb/repo/10.11/debian Bullseye main'
 # 安装 MariaDB Server
 sudo apt update
 sudo apt install mariadb-server -y
@@ -97,10 +97,10 @@ echo -e "\033[36m###############################################################
 # 添加 PPA
 add-apt-repository ppa:ondrej/php -y
 apt update
-# 安装PHP 7.3，如果需要其他版本，自行替换
-apt install -y php7.3-fpm php7.3-mysql php7.3-curl php7.3-gd php7.3-mbstring php7.3-xml php7.3-xmlrpc php7.3-opcache php7.3-zip php7.3 php7.3-json php7.3-bz2 php7.3-bcmath
+# 安装PHP 8.2，如果需要其他版本，自行替换
+apt install -y php8.2-fpm php8.2-mysql php8.2-curl php8.2-gd php8.2-mbstring php8.2-xml php8.2-xmlrpc php8.2-opcache php8.2-zip php8.2 php8.2-bz2 php8.2-bcmath
 # 开机自启
-sudo systemctl enable php7.3-fpm
+sudo systemctl enable php8.2-fpm
 
 echo -e "\033[36m#######################################################################\033[0m"
 echo -e "\033[36m#                                                                     #\033[0m"
@@ -129,7 +129,7 @@ server {
     listen [::]:80;
     root /var/www/sspanel/public; # 改成你自己的路径，需要以 /public 结尾
     index index.php index.html;
-    # server_name https://gz1903.github.io; # 改成你自己的域名
+    # server_name https://guagua.publicvm.com; # 改成你自己的域名
 
     location / {
         try_files $uri /index.php$is_args$args;
@@ -137,7 +137,7 @@ server {
 
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/run/php/php7.3-fpm.sock;
+        fastcgi_pass unix:/run/php/php8.2-fpm.sock;
     }
 }
 eof
@@ -156,17 +156,19 @@ echo -e "\033[36m###############################################################
 # 清空目录文件
 rm -rf /var/www/*
 
-cd /var/www/
-git clone https://github.com/BobCoderS9/SSPanel-Metron.git ${pwd}
+mkdir sspanel
+cd /var/www/sspanel
+git clone https://github.com/imRoll/GoPassThemeForSSPanel.git ${PWD}
+
 # 下载 composer
-cd /var/www/sspanel/
+cd /var/www/sspanel
 git config core.filemode false
 wget https://getcomposer.org/installer -O composer.phar
 echo -e "\033[32m软件下载安装中，时间较长请稍等~\033[0m"
 # 安装 PHP 依赖
 php composer.phar
 echo -e "\033[32m请输入yes确认安装！~\033[0m"
-php composer.phar install
+php composer.phar install  --ignore-platform-reqs 
 # 调整目录权限
 chmod -R 755 ${PWD}
 chown -R www-data:www-data ${PWD}
@@ -175,11 +177,13 @@ chown -R www-data:www-data ${PWD}
 cd /var/www/sspanel/
 cp config/.config.example.php config/.config.php
 cp config/appprofile.example.php config/appprofile.php
+cp config/.metron_setting.example.php config/.metron_setting.php
+cp config/.zeroconfig.example.php config/.zeroconfig.php
 # 设置sspanel数据库连接
 # 设置此key为随机字符串确保网站安全 !!!
 sed -i "s/1145141919810/aksgsj@h$RANDOM/" /var/www/sspanel/config/.config.php
 # 站点名称
-sed -i "s/SSPanel-UIM/飞一般的感觉/" /var/www/sspanel/config/.config.php
+sed -i "s/SSPanel-UIM/小满/" /var/www/sspanel/config/.config.php
 # 站点地址
 sed -i "s/https:\/\/sspanel.host/http:\/\/$ips/" /var/www/sspanel/config/.config.php
 # 用于校验魔改后端请求
