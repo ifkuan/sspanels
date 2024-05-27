@@ -129,7 +129,7 @@ server {
     listen [::]:80;
     root /var/www/sspanel/public; # 改成你自己的路径，需要以 /public 结尾
     index index.php index.html;
-    # server_name https://guagua.publicvm.com; # 改成你自己的域名
+    server_name guagua.publicvm.com www.guagua.publicvm.com;
 
     location / {
         try_files $uri /index.php$is_args$args;
