@@ -68,7 +68,7 @@ echo -e "\033[36m###############################################################
 # MariaDB 与 MySQL 完全兼容
 # 选取官方源的镜像进行安装 MariaDB 10.11 稳定版本
 # 添加清华源
-sudo apt-get install software-properties-common dirmngr apt-transport-https
+sudo apt-get install -y software-properties-common dirmngr apt-transport-https
 sudo apt-key adv --fetch-keys 'https://mariadb.org/mariadb_release_signing_key.asc'
 sudo add-apt-repository 'deb [arch=amd64,arm64,ppc64el] https://mirrors.tuna.tsinghua.edu.cn/mariadb/repo/10.11/debian Bullseye main'
 # 安装 MariaDB Server
@@ -100,7 +100,7 @@ echo -e "\033[36m###############################################################
  curl -fsSL  https://packages.sury.org/php/apt.gpg| sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/sury-keyring.gpg
  apt update 
 # 安装PHP 8.2，如果需要其他版本，自行替换
-apt install php8.2
+apt install php8.2 -y
 apt install php8.2-{bcmath,fpm,xml,mysql,zip,intl,ldap,gd,cli,bz2,curl,mbstring,pgsql,opcache,soap,cgi,xmlrpc,fileinfo,redis,swoole,readline,inotify} -y
 
 #apt 不能安装的，用pecl install 命令安装
@@ -109,8 +109,8 @@ curl -O https://pear.php.net/go-pear.phar
 sudo php -d detect_unicode=0 go-pear.phar
 
 #用pear安装event扩展
-apt install php-cli php-dev libevent-dev
-pecl install event
+apt install -y php-cli php-dev libevent-dev
+pecl install event -y
 
 # 开机自启
 sudo systemctl enable php8.2-fpm
@@ -167,21 +167,20 @@ echo -e "\033[36m###############################################################
 # 安装sspanel软件包
 # 去官网下载编译安装的sspanel：https://github.com/Anankke/SSPanel-Uim.git
 # 清空目录文件
-rm -rf /var/www/*
+rm -rf /var/www/sspanel
 
 mkdir /var/www/sspanel
 cd /var/www/sspanel
 git clone https://github.com/imRoll/GoPassThemeForSSPanel.git ${PWD}
 
 # 下载 composer
-cd /var/www/sspanel
 git config core.filemode false
 wget https://getcomposer.org/installer -O composer.phar
 echo -e "\033[32m软件下载安装中，时间较长请稍等~\033[0m"
 # 安装 PHP 依赖
 php composer.phar
 echo -e "\033[32m请输入yes确认安装！~\033[0m"
-php composer.phar install  --ignore-platform-reqs 
+php composer.phar install  -y --ignore-platform-reqs 
 # 调整目录权限
 chmod -R 755 ${PWD}
 chown -R www-data:www-data ${PWD}
