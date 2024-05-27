@@ -100,18 +100,29 @@ apt update
 apt install php8.2 -y
 apt install php8.2-{bcmath,fpm,xml,mysql,zip,intl,ldap,gd,cli,bz2,curl,mbstring,pgsql,opcache,soap,cgi,xmlrpc,mcrypt,fileinfo,redis,swoole,readline,inotify} -y
 
-#apt 不能安装的，用pecl install 命令安装
+
+echo -e "\033[36m#######################################################################\033[0m"
+echo -e "\033[36m#                                                                     #\033[0m"
+echo -e "\033[36m#      正在安装配置webman环境及扩展  时间较长请稍等~                  #\033[0m"
+echo -e "\033[36m#                                                                     #\033[0m"
+echo -e "\033[36m#######################################################################\033[0m"
+
+#webman需要event扩展 ，用pecl install 命令安装
 #先安装pecl
 curl -O https://pear.php.net/go-pear.phar
 sudo php -d detect_unicode=0 go-pear.phar
 
-#用pear安装event扩展
-apt install -y php8.2-cli php8.2-dev libevent-dev
+#用pear安装event扩展 
+apt remove -y libevent libevent-devel
+apt install -y libevent-dev libevent2-devel libevent2
 pecl install event -y
+sed -i '$a\extension=event.so' /etc/php/8.2/apache2/php.ini
+pecl clear-cache
 
 # 开机自启
 sudo systemctl enable php8.2-fpm
 
+# 开启webman守护进程
 
 echo -e "\033[36m#######################################################################\033[0m"
 echo -e "\033[36m#                                                                     #\033[0m"
@@ -122,6 +133,15 @@ sed -i "s/post_max_size = 8M/post_max_size = 32M/" /etc/php/8.2/apache2/php.ini
 sed -i "s/max_execution_time = 30/max_execution_time = 600/" /etc/php/8.2/apache2/php.ini
 sed -i "s/max_input_time = 60/max_input_time = 600/" /etc/php/8.2/apache2/php.ini
 sed -i "s#;date.timezone =#date.timezone = Asia/Shanghai#" /etc/php/8.2/apache2/php.ini
+
+sed -i 's/,system//g' /usr/local/php/etc/php.ini
+sed -i 's/,proc_open//g' /usr/local/php/etc/php.ini
+sed -i 's/,proc_get_status//g' /usr/local/php/etc/php.ini
+sed -i 's/,putenv//g' /usr/local/php/etc/php.ini
+sed -i 's/,pcntl_alarm//g' /usr/local/php/etc/php.ini
+sed -i 's/,pcntl_signal//g' /usr/local/php/etc/php.ini
+sed -i 's/,popen//g' /usr/local/php/etc/php.ini
+sed -i 's/^fastcgi_param PHP_ADMIN_VALUE/#fastcgi_param PHP_ADMIN_VALUE/g' 
 
 # 配置php-sg11
 mkdir -p /sg
@@ -221,15 +241,16 @@ cp config/.zeroconfig.example.php config/.zeroconfig.php
 # 设置此key为随机字符串确保网站安全 !!!
 sed -i "s/1145141919810/aks34Wgsj@h$RANDOM/" /var/www/sspanel/config/.config.php
 # 站点名称
-sed -i "s/SSPanel-UIM/小满/" /var/www/sspanel/config/.config.php
+sed -i "s/Name'\] = 'sspanel'/Name'\] = 'xiaoman'/" /var/www/sspanel/config/.config.php
 # 站点地址
-sed -i "s/https:\/\/url.com/http:\/\/$ips/" /var/www/sspanel/config/.config.php
+sed -i "s/http:\/\/url.com/http:\/\/$ips/" /var/www/sspanel/config/.config.php
 # 用于校验魔改后端请求
 sed -i "s/default_mu_key/sadg^#@s$RANDOM/" /var/www/sspanel/config/.config.php
 # 设置sspanel数据库连接地址
-sed -i "s/host'\]      = ''/host'\]      = '127.0.0.1'/" /var/www/sspanel/config/.config.php
+sed -i "s/host'\] = ''/host'\] = '127.0.0.1'/" /var/www/sspanel/config/.config.php
 # 设置数据库连接密码
-sed -i "s/password'\]  = 'sspanel'/password'\]  = '$Database_Password'/" /var/www/sspanel/config/.config.php
+sed -i "s/password'\] = 'sspanel'/password'\] = '$Database_Password'/" /var/www/sspanel/config/.config.php
+
 # 导入数据库文件
 mysql -uxiaoman -p$Database_Password sspanel < /var/www/sspanel/sql/clean.sql;
 mysql -uxiaoman -p$Database_Password sspanel < /var/www/sspanel/sql/config.sql;
