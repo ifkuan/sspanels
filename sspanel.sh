@@ -48,8 +48,6 @@ echo -e "\033[36m###############################################################
 # 更新必备基础软件
 apt update && apt upgrade -y
 apt install -y curl vim wget unzip apt-transport-https lsb-release ca-certificates git gnupg2
-# 更新PPA软件源
-apt install software-properties-common
 
 echo -e "\033[36m#######################################################################\033[0m"
 echo -e "\033[36m#                                                                     #\033[0m"
@@ -67,27 +65,29 @@ echo -e "\033[36m###############################################################
 # MariaDB 是 MySQL 关系数据库管理系统的一个复刻，由社区开发，有商业支持，旨在继续保持在 GNU GPL 下开源。
 # MariaDB 与 MySQL 完全兼容
 # 选取官方源的镜像进行安装 MariaDB 10.11 稳定版本
-# 添加清华源
-sudo apt-get install -y software-properties-common dirmngr apt-transport-https
-sudo apt-key adv --fetch-keys 'https://mariadb.org/mariadb_release_signing_key.asc'
-sudo add-apt-repository 'deb [arch=amd64,arm64,ppc64el] https://mirrors.tuna.tsinghua.edu.cn/mariadb/repo/10.11/debian Bullseye main'
-# 安装 MariaDB Server
-sudo apt update
-sudo apt install mariadb-server -y
+curl -o /etc/apt/trusted.gpg.d/mariadb_release_signing_key.asc 'https://mariadb.org/mariadb_release_signing_key.asc'
+sh -c "echo 'deb https://atl.mirrors.knownhost.com/mariadb/repo/10.11/debian bullseye main' >>/etc/apt/sources.list"
+apt update
+apt install mariadb-server -y
+
+
 
 echo -e "\033[36m#######################################################################\033[0m"
 echo -e "\033[36m#                                                                     #\033[0m"
 echo -e "\033[36m#         正在安装Nginx环境  时间较长请稍等~                          #\033[0m"
 echo -e "\033[36m#                                                                     #\033[0m"
 echo -e "\033[36m#######################################################################\033[0m"
-# 添加 PPA
-add-apt-repository ppa:ondrej/nginx -y
+# 添加 官方源
+sudo add-apt-repository 'deb https://nginx.org/packages/debian/ bullseye nginx'
+sudo add-apt-repository 'deb-src https://nginx.org/packages/debian/ bullseye nginx'
+wget  https://nginx.org/keys/nginx_signing.key
+# 安装 nginx最新版
+apt-key add nginx_signing.key
 apt update
-sudo apt install nginx -y
-# 开机自启
-sudo systemctl enable nginx
+apt install nginx
 # 检测Nginx版本
 nginx -V
+
 
 echo -e "\033[36m#######################################################################\033[0m"
 echo -e "\033[36m#                                                                     #\033[0m"
@@ -95,13 +95,12 @@ echo -e "\033[36m#         正在安装配置PHP环境及扩展  时间较长请
 echo -e "\033[36m#                                                                     #\033[0m"
 echo -e "\033[36m#######################################################################\033[0m"
 # 设置Debian官方PHP源
- apt install -y lsb-release ca-certificates apt-transport-https software-properties-common gnupg2
- echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/sury-php.list
- curl -fsSL  https://packages.sury.org/php/apt.gpg| sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/sury-keyring.gpg
- apt update 
+echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/sury-php.list
+curl -fsSL  https://packages.sury.org/php/apt.gpg| sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/sury-keyring.gpg
+apt update 
 # 安装PHP 8.2，如果需要其他版本，自行替换
 apt install php8.2 -y
-apt install php8.2-{bcmath,fpm,xml,mysql,zip,intl,ldap,gd,cli,bz2,curl,mbstring,pgsql,opcache,soap,cgi,xmlrpc,fileinfo,redis,swoole,readline,inotify} -y
+apt install php8.2-{bcmath,fpm,xml,mysql,zip,intl,ldap,gd,cli,bz2,curl,mbstring,pgsql,opcache,soap,cgi,xmlrpc,mcrypt,fileinfo,redis,swoole,readline,inotify} -y
 
 #apt 不能安装的，用pecl install 命令安装
 #先安装pecl
@@ -109,7 +108,7 @@ curl -O https://pear.php.net/go-pear.phar
 sudo php -d detect_unicode=0 go-pear.phar
 
 #用pear安装event扩展
-apt install -y php-cli php-dev libevent-dev
+apt install -y php8.2-cli php8.2-dev libevent-dev
 pecl install event -y
 
 # 开机自启
@@ -165,13 +164,12 @@ echo -e "\033[36m#                   正在编译sspanel软件 请稍等~       
 echo -e "\033[36m#                                                                     #\033[0m"
 echo -e "\033[36m#######################################################################\033[0m"
 # 安装sspanel软件包
-# 去官网下载编译安装的sspanel：https://github.com/Anankke/SSPanel-Uim.git
-# 清空目录文件
+# 清空目录文件全新下载
 rm -rf /var/www/sspanel
-
 mkdir /var/www/sspanel
 cd /var/www/sspanel
-git clone https://github.com/imRoll/GoPassThemeForSSPanel.git ${PWD}
+git clone https://github.com/ifkuan/GoPassThemeForSSPanel.git ${PWD}
+
 
 # 下载 composer
 git config core.filemode false
@@ -180,7 +178,7 @@ echo -e "\033[32m软件下载安装中，时间较长请稍等~\033[0m"
 # 安装 PHP 依赖
 php composer.phar
 echo -e "\033[32m请输入yes确认安装！~\033[0m"
-php composer.phar install  -y --ignore-platform-reqs 
+php composer.phar install  --ignore-platform-reqs 
 # 调整目录权限
 chmod -R 755 ${PWD}
 chown -R www-data:www-data ${PWD}
