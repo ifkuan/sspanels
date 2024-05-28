@@ -96,9 +96,9 @@ echo -e "\033[36m###############################################################
 echo "deb https://packages.sury.org/php/ $(lsb_release -sc) main" | sudo tee /etc/apt/sources.list.d/sury-php.list
 curl -fsSL  https://packages.sury.org/php/apt.gpg| sudo gpg --dearmor -o /etc/apt/trusted.gpg.d/sury-keyring.gpg
 apt update 
-# 安装PHP 8.2，如果需要其他版本，自行替换
-apt install php8.2 -y
-apt install php8.2-{bcmath,fpm,xml,mysql,zip,intl,ldap,gd,cli,bz2,curl,mbstring,pgsql,opcache,soap,cgi,xmlrpc,mcrypt,fileinfo,redis,swoole,readline,inotify} -y
+# 安装PHP 7.2，如果需要其他版本，自行替换
+apt install php7.2 -y
+apt install php7.2-{bcmath,fpm,xml,mysql,zip,intl,ldap,gd,cli,bz2,curl,mbstring,pgsql,opcache,soap,cgi,xmlrpc,mcrypt,fileinfo,redis,swoole,readline,inotify} -y
 
 
 echo -e "\033[36m#######################################################################\033[0m"
@@ -116,11 +116,11 @@ sudo php -d detect_unicode=0 go-pear.phar
 apt remove -y libevent libevent-devel
 apt install -y libevent-dev libevent2-devel libevent2
 pecl install event -y
-sed -i '$a\extension=event.so' /etc/php/8.2/apache2/php.ini
+sed -i '$a\extension=event.so' /etc/php/7.2/apache2/php.ini
 pecl clear-cache
 
 # 开机自启
-sudo systemctl enable php8.2-fpm
+sudo systemctl enable php7.2-fpm
 
 # 开启webman守护进程
 
@@ -129,24 +129,24 @@ echo -e "\033[36m#                                                              
 echo -e "\033[36m#                    正在配置PHP.ini 请稍等~                          #\033[0m"
 echo -e "\033[36m#                                                                     #\033[0m"
 echo -e "\033[36m#######################################################################\033[0m"
-sed -i "s/post_max_size = 8M/post_max_size = 32M/" /etc/php/8.2/apache2/php.ini
-sed -i "s#;date.timezone =#date.timezone = Asia/Shanghai#" /etc/php/8.2/apache2/php.ini
-sed -i "s/max_execution_time = 30/max_execution_time = 600/" /etc/php/8.2/apache2/php.ini
-sed -i "s/max_input_time = 60/max_input_time = 600/" /etc/php/8.2/apache2/php.ini
+sed -i "s/post_max_size = 8M/post_max_size = 32M/" /etc/php/7.2/apache2/php.ini
+sed -i "s#;date.timezone =#date.timezone = Asia/Shanghai#" /etc/php/7.2/apache2/php.ini
+sed -i "s/max_execution_time = 30/max_execution_time = 600/" /etc/php/7.2/apache2/php.ini
+sed -i "s/max_input_time = 60/max_input_time = 600/" /etc/php/7.2/apache2/php.ini
 
-sed -i 's/,system//g' /etc/php/8.2/apache2/php.ini
-sed -i 's/,proc_open//g' /etc/php/8.2/apache2/php.ini
-sed -i 's/,proc_get_status//g' /etc/php/8.2/apache2/php.ini
-sed -i 's/,putenv//g' /etc/php/8.2/apache2/php.ini
-sed -i 's/,pcntl_alarm//g' /etc/php/8.2/apache2/php.ini
-sed -i 's/,pcntl_signal//g' /etc/php/8.2/apache2/php.ini
-sed -i 's/,popen//g' /etc/php/8.2/apache2/php.ini
-sed -i 's/^fastcgi_param PHP_ADMIN_VALUE/#fastcgi_param PHP_ADMIN_VALUE/g' /etc/php/8.2/apache2/php.ini
+sed -i 's/,system//g' /etc/php/7.2/apache2/php.ini
+sed -i 's/,proc_open//g' /etc/php/7.2/apache2/php.ini
+sed -i 's/,proc_get_status//g' /etc/php/7.2/apache2/php.ini
+sed -i 's/,putenv//g' /etc/php/7.2/apache2/php.ini
+sed -i 's/,pcntl_alarm//g' /etc/php/7.2/apache2/php.ini
+sed -i 's/,pcntl_signal//g' /etc/php/7.2/apache2/php.ini
+sed -i 's/,popen//g' /etc/php/7.2/apache2/php.ini
+sed -i 's/^fastcgi_param PHP_ADMIN_VALUE/#fastcgi_param PHP_ADMIN_VALUE/g' /etc/php/7.2/apache2/php.ini
 
 # 配置php-sg11
 mkdir -p /sg
 wget -P /sg/  https://cdn.jsdelivr.net/gh/gz1903/sg11/Linux%2064-bit/ixed.7.4.lin
-sed -i '$a\extension=/sg/ixed.7.4.lin' /etc/php/8.2/apache2/php.ini
+sed -i '$a\extension=/sg/ixed.7.4.lin' /etc/php/7.2/apache2/php.ini
 #修改PHP配置文件
 echo $?="PHP.ini配置完成"
 
@@ -197,7 +197,7 @@ server {
 
     location ~ \.php$ {
         include snippets/fastcgi-php.conf;
-        fastcgi_pass unix:/run/php/php8.2-fpm.sock;
+        fastcgi_pass unix:/run/php/php7.2-fpm.sock;
     }
 }
 eof
@@ -221,7 +221,7 @@ git clone https://github.com/ifkuan/GoPassThemeForSSPanel.git ${PWD}
 
 # 下载 composer
 git config core.filemode false
-sed -i 's/;extension=fileinfo/extension=fileinfo/g' /etc/php/8.2/apache2/php.ini
+sed -i 's/;extension=fileinfo/extension=fileinfo/g' /etc/php/7.2/apache2/php.ini
 wget https://getcomposer.org/installer -O composer.phar
 echo -e "\033[32m软件下载安装中，时间较长请稍等~\033[0m"
 # 安装 PHP 依赖
@@ -279,7 +279,7 @@ php xcat Tool initQQWry
 chmod -R 755 /data/wwwroot/sspanel
 chown -R www:www /data/wwwroot/sspanel
 systemctl restart nginx
-service php8.2-fpm restart
+service php7.2-fpm restart
 nginx -s reload
 echo $?="服务启动完成"
 # 清理无用包
@@ -291,7 +291,7 @@ echo -e "\033[32m 数据库用户名 :xiaoman\033[0m"
 echo -e "\033[32m 数据库密码   :"$Database_Password
 echo -e "\033[32m 网站目录     :/data/wwwroot/sspanel\033[0m"
 echo -e "\033[32m 配置文件     :/data/wwwroot/sspanel/config/.config.php\033[0m"
-echo -e "\033[32m PHP配置文件  :/etc/php/8.2/apache2/php.ini\033[0m"
+echo -e "\033[32m PHP配置文件  :/etc/php/7.2/apache2/php.ini\033[0m"
 echo -e "\033[32m Nginx配置目录:/etc/nginx/conf.d/\033[0m"
 echo -e "\033[32m 网页内网访问 :http://"$ip
 echo -e "\033[32m 网页外网访问 :http://"$ips
