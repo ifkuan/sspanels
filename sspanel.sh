@@ -82,7 +82,7 @@ wget  https://nginx.org/keys/nginx_signing.key
 # 安装 nginx最新版
 apt-key add nginx_signing.key
 apt update
-apt install nginx
+apt -y install nginx
 # 检测Nginx版本
 nginx -V
 
@@ -130,25 +130,25 @@ echo -e "\033[36m#                    正在配置PHP.ini 请稍等~            
 echo -e "\033[36m#                                                                     #\033[0m"
 echo -e "\033[36m#######################################################################\033[0m"
 sed -i "s/post_max_size = 8M/post_max_size = 32M/" /etc/php/8.2/apache2/php.ini
+sed -i "s#;date.timezone =#date.timezone = Asia/Shanghai#" /etc/php/8.2/apache2/php.ini
 sed -i "s/max_execution_time = 30/max_execution_time = 600/" /etc/php/8.2/apache2/php.ini
 sed -i "s/max_input_time = 60/max_input_time = 600/" /etc/php/8.2/apache2/php.ini
-sed -i "s#;date.timezone =#date.timezone = Asia/Shanghai#" /etc/php/8.2/apache2/php.ini
 
-sed -i 's/,system//g' /usr/local/php/etc/php.ini
-sed -i 's/,proc_open//g' /usr/local/php/etc/php.ini
-sed -i 's/,proc_get_status//g' /usr/local/php/etc/php.ini
-sed -i 's/,putenv//g' /usr/local/php/etc/php.ini
-sed -i 's/,pcntl_alarm//g' /usr/local/php/etc/php.ini
-sed -i 's/,pcntl_signal//g' /usr/local/php/etc/php.ini
-sed -i 's/,popen//g' /usr/local/php/etc/php.ini
-sed -i 's/^fastcgi_param PHP_ADMIN_VALUE/#fastcgi_param PHP_ADMIN_VALUE/g' 
+sed -i 's/,system//g' /etc/php/8.2/apache2/php.ini
+sed -i 's/,proc_open//g' /etc/php/8.2/apache2/php.ini
+sed -i 's/,proc_get_status//g' /etc/php/8.2/apache2/php.ini
+sed -i 's/,putenv//g' /etc/php/8.2/apache2/php.ini
+sed -i 's/,pcntl_alarm//g' /etc/php/8.2/apache2/php.ini
+sed -i 's/,pcntl_signal//g' /etc/php/8.2/apache2/php.ini
+sed -i 's/,popen//g' /etc/php/8.2/apache2/php.ini
+sed -i 's/^fastcgi_param PHP_ADMIN_VALUE/#fastcgi_param PHP_ADMIN_VALUE/g' /etc/php/8.2/apache2/php.ini
 
 # 配置php-sg11
 mkdir -p /sg
-wget -P /sg/  https://cdn.jsdelivr.net/gh/gz1903/sg11/Linux%2064-bit/ixed.7.3.lin
-sed -i '$a\extension=/sg/ixed.7.3.lin' /etc/php/8.2/apache2/php.ini
+wget -P /sg/  https://cdn.jsdelivr.net/gh/gz1903/sg11/Linux%2064-bit/ixed.7.4.lin
+sed -i '$a\extension=/sg/ixed.7.4.lin' /etc/php/8.2/apache2/php.ini
 #修改PHP配置文件
-echo $?="PHP.inin配置完成完成"
+echo $?="PHP.ini配置完成"
 
 
 echo -e "\033[36m#######################################################################\033[0m"
@@ -180,14 +180,14 @@ echo -e "\033[36m#                    正在配置Nginx 请稍等~              
 echo -e "\033[36m#                                                                     #\033[0m"
 echo -e "\033[36m#######################################################################\033[0m"
 # 删除默认配置
-rm -rf /etc/nginx/sites-enabled/default
-rm -rf /etc/nginx/sites-available/sspanel.conf
-touch /etc/nginx/sites-available/sspanel.conf
-cat > /etc/nginx/sites-available/sspanel.conf <<"eof"
+rm -rf /etc/nginx/conf.d/default
+rm -rf /etc/nginx/conf.d/sspanel.conf
+touch /etc/nginx/conf.d/sspanel.conf
+cat > /etc/nginx/conf.d/sspanel.conf <<"eof"
 server {  
     listen 80;
     listen [::]:80;
-    root /var/www/sspanel/public; # 改成你自己的路径，需要以 /public 结尾
+    root /data/wwwroot/sspanel/public; # 改成你自己的路径，需要以 /public 结尾
     index index.php index.html;
     server_name guagua.publicvm.com www.guagua.publicvm.com; # 改成你自己的域名
 
@@ -202,8 +202,8 @@ server {
 }
 eof
 # 配置软连接。
-cd /etc/nginx/sites-enabled
-ln -s /etc/nginx/sites-available/sspanel.conf sspanel
+# cd /etc/nginx/sites-enabled
+# ln -s /etc/nginx/sites-available/sspanel.conf sspanel
 nginx -s reload
 
 echo -e "\033[36m#######################################################################\033[0m"
@@ -213,14 +213,15 @@ echo -e "\033[36m#                                                              
 echo -e "\033[36m#######################################################################\033[0m"
 # 安装sspanel软件包
 # 清空目录文件全新下载
-rm -rf /var/www/sspanel
-mkdir /var/www/sspanel
-cd /var/www/sspanel
+rm -rf /data/wwwroot/sspanel
+mkdir /data/wwwroot/sspanel
+cd /data/wwwroot/sspanel
 git clone https://github.com/ifkuan/GoPassThemeForSSPanel.git ${PWD}
 
 
 # 下载 composer
 git config core.filemode false
+sed -i 's/;extension=fileinfo/extension=fileinfo/g' /etc/php/8.2/apache2/php.ini
 wget https://getcomposer.org/installer -O composer.phar
 echo -e "\033[32m软件下载安装中，时间较长请稍等~\033[0m"
 # 安装 PHP 依赖
@@ -232,35 +233,39 @@ chmod -R 755 ${PWD}
 chown -R www-data:www-data ${PWD}
 
 # 修改配置文件
-cd /var/www/sspanel/
+cd /data/wwwroot/sspanel/
 cp config/.config.example.php config/.config.php
 cp config/appprofile.example.php config/appprofile.php
 cp config/.metron_setting.example.php config/.metron_setting.php
 cp config/.zeroconfig.example.php config/.zeroconfig.php
 # 设置sspanel数据库连接
 # 设置此key为随机字符串确保网站安全 !!!
-sed -i "s/1145141919810/aks34Wgsj@h$RANDOM/" /var/www/sspanel/config/.config.php
+sed -i "s/1145141919810/ak9abc4d52cs34Wgsj@h$RANDOM/" /data/wwwroot/sspanel/config/.config.php
 # 站点名称
-sed -i "s/Name'\] = 'sspanel'/Name'\] = 'xiaoman'/" /var/www/sspanel/config/.config.php
+sed -i "s/Name'\] = 'sspanel'/Name'\] = 'xiaoman'/" /data/wwwroot/sspanel/config/.config.php
 # 站点地址
-sed -i "s/http:\/\/url.com/http:\/\/$ips/" /var/www/sspanel/config/.config.php
+sed -i "s/http:\/\/url.com/http:\/\/$ips/" /data/wwwroot/sspanel/config/.config.php
 # 用于校验魔改后端请求
-sed -i "s/default_mu_key/sadg^#@s$RANDOM/" /var/www/sspanel/config/.config.php
+sed -i "s/default_mu_key/db2a0924ca591644d52cdabc18e00d54bc0c9$RANDOM/" /data/wwwroot/sspanel/config/.config.php
 # 设置sspanel数据库连接地址
-sed -i "s/host'\] = ''/host'\] = '127.0.0.1'/" /var/www/sspanel/config/.config.php
+sed -i "s/host'\] = ''/host'\] = '127.0.0.1'/" /data/wwwroot/sspanel/config/.config.php
+# 设置数据库名
+sed -i "s/db_database'\] = 'sspanel'/db_database'\] = 'xiaoman'/" /data/wwwroot/sspanel/config/.config.php
+# 设置数据库用户名
+sed -i "s/db_username'\] = 'root'/db_username'\] = 'xiaoman'/" /data/wwwroot/sspanel/config/.config.php
 # 设置数据库连接密码
-sed -i "s/password'\] = 'sspanel'/password'\] = '$Database_Password'/" /var/www/sspanel/config/.config.php
+sed -i "s/password'\] = 'sspanel'/password'\] = '$Database_Password'/" /data/wwwroot/sspanel/config/.config.php
 
 # 导入数据库文件
-mysql -uxiaoman -p$Database_Password sspanel < /var/www/sspanel/sql/clean.sql;
-mysql -uxiaoman -p$Database_Password sspanel < /var/www/sspanel/sql/config.sql;
-mysql -uxiaoman -p$Database_Password sspanel < /var/www/sspanel/sql/cool.sql;
-mysql -uxiaoman -p$Database_Password sspanel < /var/www/sspanel/sql/detect_ban_log.sql;
-mysql -uxiaoman -p$Database_Password sspanel < /var/www/sspanel/sql/fix_unable_to_reg.sql;
-mysql -uxiaoman -p$Database_Password sspanel < /var/www/sspanel/sql/gconfig.sql;
-mysql -uxiaoman -p$Database_Password sspanel < /var/www/sspanel/sql/telegram_tasks.sql;
-mysql -uxiaoman -p$Database_Password sspanel < /var/www/sspanel/sql/user_subscribe_log.sql;
-mysql -uxiaoman -p$Database_Password sspanel < /var/www/sspanel/sql/glzjin_all.sql;
+mysql -uxiaoman -p$Database_Password sspanel < /data/wwwroot/sspanel/sql/clean.sql;
+mysql -uxiaoman -p$Database_Password sspanel < /data/wwwroot/sspanel/sql/config.sql;
+mysql -uxiaoman -p$Database_Password sspanel < /data/wwwroot/sspanel/sql/cool.sql;
+mysql -uxiaoman -p$Database_Password sspanel < /data/wwwroot/sspanel/sql/detect_ban_log.sql;
+mysql -uxiaoman -p$Database_Password sspanel < /data/wwwroot/sspanel/sql/fix_unable_to_reg.sql;
+mysql -uxiaoman -p$Database_Password sspanel < /data/wwwroot/sspanel/sql/gconfig.sql;
+mysql -uxiaoman -p$Database_Password sspanel < /data/wwwroot/sspanel/sql/telegram_tasks.sql;
+mysql -uxiaoman -p$Database_Password sspanel < /data/wwwroot/sspanel/sql/user_subscribe_log.sql;
+mysql -uxiaoman -p$Database_Password sspanel < /data/wwwroot/sspanel/sql/glzjin_all.sql;
 
 
 echo -e "\033[36m设置管理员账号：\033[0m"
@@ -270,15 +275,24 @@ php xcat User resetTraffic
 # 下载 IP 地址库
 php xcat Tool initQQWry
 
+# 启动服务
+chmod -R 755 /data/wwwroot/sspanel
+chown -R www:www /data/wwwroot/sspanel
+systemctl restart nginx
+service php8.2-fpm restart
 nginx -s reload
 echo $?="服务启动完成"
+# 清理无用包
+apt autoremove
 
 echo -e "\033[32m--------------------------- 安装已完成 ---------------------------\033[0m"
-echo -e "\033[32m 数据库名     :sspanel\033[0m"
+echo -e "\033[32m 数据库名     :xiaoman\033[0m"
 echo -e "\033[32m 数据库用户名 :xiaoman\033[0m"
 echo -e "\033[32m 数据库密码   :"$Database_Password
-echo -e "\033[32m 网站目录     :/var/www/sspanel\033[0m"
-echo -e "\033[32m 配置目录     :/var/www/sspanel/config/.config.php\033[0m"
+echo -e "\033[32m 网站目录     :/data/wwwroot/sspanel\033[0m"
+echo -e "\033[32m 配置文件     :/data/wwwroot/sspanel/config/.config.php\033[0m"
+echo -e "\033[32m PHP配置文件  :/etc/php/8.2/apache2/php.ini\033[0m"
+echo -e "\033[32m Nginx配置目录:/etc/nginx/conf.d/\033[0m"
 echo -e "\033[32m 网页内网访问 :http://"$ip
 echo -e "\033[32m 网页外网访问 :http://"$ips
 echo -e "\033[32m 安装日志文件 :/var/log/"$install_date
